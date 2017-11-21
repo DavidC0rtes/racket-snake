@@ -34,9 +34,11 @@
 ;::::::::::::::::::::::::::::::::::::::::VARIABLES DE TESTEO:::::::::::::::::::::::::::::::::::::::::::::::::::
 (define food1 (make-posn 2 5))
 (define segs1 (list (make-posn 2 6))) ; one-segment snake
-(define segs2 (list (make-posn 2 5) (make-posn 3 5))) ; two-segment snake
+(define segs2 (list (make-posn 2 5) (make-posn 3 5)))
+(define segs3 (list (make-posn 2 5) (make-posn 3 5) (make-posn 3 1)))
 (define snake1 (make-snake segs1 'up))
 (define snake2 (make-snake segs2 'up))
+(define snake3 (make-snake segs3 'up))
 (define world1 (make-world snake1 food1))
 (define world2 (make-world snake2 food1)) ; eating
 
@@ -194,9 +196,26 @@
     [else
      w]))
   
-(big-bang WORLD-0
+  ;Contrato: score:  serpiente number-> number
+;Propósito: Crear un puntaje. Cada vez que el snake come una fruta
+;tiene +1 punto.
+;Ejemplos:
+;(score world2) => Debe retornar 1
+(define (score serpiente n)
+  (cond
+    [(empty? (rest serpiente)) n]
+    [(<= (length serpiente) 1) n]
+    [else
+     (score (rest serpiente) (+ n 1))]))
+;Pruebas
+(check-expect (score (snake-segs snake1) 0) 0)
+(check-expect (score (snake-segs snake2) 0) 1)
+(check-expect (score (snake-segs snake3) 0) 2)
+  
+(define (main w)
+  (big-bang w
   [to-draw render]
   [on-tick next-world TICK]
   [on-key tecla]
   [name "snek"]
-  )
+  ))
