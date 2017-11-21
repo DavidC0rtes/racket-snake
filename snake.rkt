@@ -1,9 +1,9 @@
-;fuckin snake. World es el rey, snake  fruta son sus lacayos.
+;;Snake
 (require 2htdp/universe)
 (require 2htdp/image)
 
-;fuckin estructuras
-;world es una estructura, compuesta por otras estructuras; snake y fruta
+;;::::::::::::::::::DEFINICION DE ESTRUCTURAS::::::::::::::::::::::::::::::::::::
+;world es una estructura,representa el estado del mundo, compuesta por otras estructuras; snake y fruta
 (define-struct world (snake fruta))
 ;fruta es una estructura. Pos representa la celda que esta ocupando dentro del canvas posn(x,y)
 (define-struct fruta (pos))
@@ -30,6 +30,7 @@
 (define WORLD-0
   (make-world (make-snake (list (make-posn 2 6) ) "right")
   (make-posn 1 15)))
+  
 ;::::::::::::::::::::::::::::::::::::::::VARIABLES DE TESTEO:::::::::::::::::::::::::::::::::::::::::::::::::::
 (define food1 (make-posn 2 5))
 (define segs1 (list (make-posn 2 6))) ; one-segment snake
@@ -42,7 +43,7 @@
 
 
 ;:::::::::::::::::::::::::::::::::::::::::FUNCIONES DEL MUNDO::::::::::::::::::::::::::::::::::::::::::::::::::::
-;;__________________FUNCIONES PARA RENDERIZAR_______________________________
+;;FUNCIONES PARA RENDERIZAR
 
 ;Contrato: render: world -> image
 ;Propósito: Renderizar el estado del mundo
