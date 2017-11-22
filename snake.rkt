@@ -211,6 +211,10 @@
 (check-expect (score (snake-segs snake1) 0) 0)
 (check-expect (score (snake-segs snake2) 0) 1)
 (check-expect (score (snake-segs snake3) 0) 2)
+
+;;pinta el score en el mundo
+(define (fig-score w)
+  (text (number->string (score (snake-segs (world-snake w)) 0)) CELDA "white"))
   
 (define (main w)
   (big-bang w
