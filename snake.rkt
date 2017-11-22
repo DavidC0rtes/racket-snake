@@ -213,8 +213,8 @@
 (check-expect (score (snake-segs snake3) 0) 2)
 
 ;;guarda el puntaje en un archivo de texto
-(define (guardar-score serpiente n)
-  (write-file "otp.txt" (number->string (score serpiente n))))
+;(define (guardar-score serpiente n)
+ ; (write-file "otp.txt" (number->string (score serpiente n))))
 
 (define (pintar-puntos w )
   (place-image
