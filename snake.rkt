@@ -109,6 +109,13 @@
 
 (define (score++ serpiente)
   (make-score (calc-score serpiente 0) ))
+  
+;dibuja la última escena
+(define (last-scene w)
+  (place-image
+   (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
+   (/ ANCHO 2) (/ LARGO 2)
+   (render w)))
 ;;____________________________FUNCIONES PARA EL MOVIMIENTO______________________________
 ;Contrato: snake-grow: snake -> snake. Donde snake es una estructura
 ;Proposito: añade un nuevo segmento a la serpiente en la "cabecera" a una direccion dada
@@ -186,7 +193,14 @@
 (define (in-bounds? p)
   (and (>= (posn-x p) 0) (< (posn-x p) N-COLUMNAS)
        (>= (posn-y p) 0) (< (posn-y p) N-FILAS)))
+       
+  
+;;evalúa si el jugador ha perdido.
+;;es decir, si choca con un muro o si choca consigo mismo
+(define (end? w)
+  (or (world-collision? w) (self-collision? w)))
 
+       
 ;________________________________________FUNCIONES LOGICAS_____________________________________
 ;Contrato: next-world: world -> world. donde w es una estructura.
 ;Propósito: Funcion que calcula el nuevo estado del mundo cada tick del reloj
@@ -226,4 +240,5 @@
   [to-draw render]
   [on-tick next-world TICK]
   [on-key tecla]
+  [stop-when end? last-scene]
 [name "snek"]))
