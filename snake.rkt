@@ -50,9 +50,12 @@
 ;Contrato: render: world -> image
 ;Propósito: Renderizar el estado del mundo
 (define (render w)
+(place-image
+   (fig-score (snake-segs (world-snake w)))
+   510 15
   (snake+img (world-snake w)
              (food+img (world-fruta w)
-                       FONDO)))
+                       FONDO))))
 
 ;Contrato: imagen-en-celda: imagen numero numero imagen -> imagen
 ;Proposito:  dibuja imagen1 en el centro de una celda (x,y) dada en la imagen2
