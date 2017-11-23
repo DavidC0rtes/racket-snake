@@ -212,15 +212,10 @@
 (check-expect (score (snake-segs snake2) 0) 1)
 (check-expect (score (snake-segs snake3) 0) 2)
 
-;;guarda el puntaje en un archivo de texto
-;(define (guardar-score serpiente n)
- ; (write-file "otp.txt" (number->string (score serpiente n))))
+;;pinta el score en el mundo
+(define (fig-score w)
+  (text (number->string (score (snake-segs (world-snake w)) 0)) CELDA "white"))
 
-(define (pintar-puntos w )
-  (place-image
-  (text (number->string (score (snake-segs (world-snake w)) 0)) 20 "white")
-   510 15
-  (render w)))
   
 (define (main w)
   (big-bang w
