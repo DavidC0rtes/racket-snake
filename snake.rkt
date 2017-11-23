@@ -54,7 +54,7 @@
 (define (render w)
   (place-image
    (fig-score (snake-segs (world-snake w)))
-   510 15
+   480 15
   (snake+img (world-snake w)
              (food+img (world-fruta w)
                        FONDO))))
@@ -99,7 +99,7 @@
 
 ;;pinta el score en el mundo
 (define (fig-score x)
-  (text (number->string (calc-score x 0)) 20 "white"))
+  (text (string-append "Score: (number->string (calc-score x 0))) 20 "white"))
 
 (define (calc-score serpiente n)
 (cond
