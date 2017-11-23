@@ -4,9 +4,11 @@
 
 ;;::::::::::::::::::DEFINICION DE ESTRUCTURAS::::::::::::::::::::::::::::::::::::
 ;world es una estructura,representa el estado del mundo, compuesta por otras estructuras; snake y fruta
-(define-struct world (snake fruta))
+(define-struct world (snake fruta score))
 ;fruta es una estructura. Pos representa la celda que esta ocupando dentro del canvas posn(x,y)
 (define-struct fruta (pos))
+;score es una estructura unitaria, n es un número y representa el puntaje del jugador
+(define-struct score (n))
 ;snake es una estructura. dir es un string, representa la direccion de un segmento del snake.
 ;pos es la celda que ocupa en coordenadas posn(x,y)
 (define-struct snake (segs dir))
@@ -29,7 +31,7 @@
 
 (define WORLD-0
   (make-world (make-snake (list (make-posn 2 6) ) "right")
-  (make-posn 1 15)))
+  (make-posn 1 15) (make-score 0)))
   
 ;::::::::::::::::::::::::::::::::::::::::VARIABLES DE TESTEO:::::::::::::::::::::::::::::::::::::::::::::::::::
 (define food1 (make-posn 2 5))
@@ -39,8 +41,8 @@
 (define snake1 (make-snake segs1 'up))
 (define snake2 (make-snake segs2 'up))
 (define snake3 (make-snake segs3 'up))
-(define world1 (make-world snake1 food1))
-(define world2 (make-world snake2 food1)) ; eating
+;(define world1 (make-world snake1 food1))
+;(define world2 (make-world snake2 food1)) ; eating
 
 
 
@@ -50,7 +52,7 @@
 ;Contrato: render: world -> image
 ;Propósito: Renderizar el estado del mundo
 (define (render w)
-(place-image
+  (place-image
    (fig-score (snake-segs (world-snake w)))
    510 15
   (snake+img (world-snake w)
@@ -89,6 +91,24 @@
 ;Ejemplo: 
 (define (food+img fruta img)
   (imagen-en-celda APPLE (posn-x fruta) (posn-y fruta) img))
+
+;Contrato: score+img: number --> image
+;Propósito: Hacer que el puntaje aparezca durante el juego y se actualice
+(define (score+img score img)
+  (imagen-en-celda (fig-score (snake-segs score)) 510 15 img))
+
+;;pinta el score en el mundo
+(define (fig-score x)
+  (text (number->string (calc-score x 0)) 20 "white"))
+
+(define (calc-score serpiente n)
+(cond
+  [(empty? serpiente) n]
+  [(<= (length serpiente) 1) n]
+  [else (calc-score (rest serpiente) (+ n 1))]))
+
+(define (score++ serpiente)
+  (make-score (calc-score serpiente 0) ))
 ;;____________________________FUNCIONES PARA EL MOVIMIENTO______________________________
 ;Contrato: snake-grow: snake -> snake. Donde snake es una estructura
 ;Proposito: añade un nuevo segmento a la serpiente en la "cabecera" a una direccion dada
@@ -178,10 +198,11 @@
     [(comiendo? w) (make-world
                     (snake-grow (world-snake w))
                     (make-posn (random N-COLUMNAS)
-                               (random N-FILAS)))]
+                               (random N-FILAS))
+                    (score++ (snake-segs (world-snake w))))]
     [else
      (make-world (snake-slither (world-snake w))
-                 (world-fruta w))]))
+                 (world-fruta w) (world-score w))]))
 
 ;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev
 ;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
@@ -194,36 +215,15 @@
       (key=? kev "left")
       (key=? kev "right"))
      (make-world (make-snake (snake-segs (world-snake w)) kev)
-                 (world-fruta w))]
+                 (world-fruta w) (world-score w))]
     [(key=? kev "f") WORLD-0]
     [else
      w]))
-  
-  ;Contrato: score:  serpiente number-> number
-;Propósito: Crear un puntaje. Cada vez que el snake come una fruta
-;tiene +1 punto.
-;Ejemplos:
-;(score world2) => Debe retornar 1
-(define (score serpiente n)
-  (cond
-    [(empty? (rest serpiente)) n]
-    [(<= (length serpiente) 1) n]
-    [else
-     (score (rest serpiente) (+ n 1))]))
-;Pruebas
-(check-expect (score (snake-segs snake1) 0) 0)
-(check-expect (score (snake-segs snake2) 0) 1)
-(check-expect (score (snake-segs snake3) 0) 2)
-
-;;pinta el score en el mundo
-(define (fig-score w)
-  (text (number->string (score (snake-segs (world-snake w)) 0)) CELDA "white"))
-
+ 
   
 (define (main w)
   (big-bang w
   [to-draw render]
   [on-tick next-world TICK]
   [on-key tecla]
-  [name "snek"]
-  ))
+[name "snek"]))
