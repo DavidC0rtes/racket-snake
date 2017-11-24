@@ -113,7 +113,9 @@
 ;dibuja la última escena
 (define (last-scene w)
   (place-image
+  (above
    (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
+   (fig-score (snake-segs (world-snake w))))
    (/ ANCHO 2) (/ LARGO 2)
    (render w)))
 ;;____________________________FUNCIONES PARA EL MOVIMIENTO______________________________
