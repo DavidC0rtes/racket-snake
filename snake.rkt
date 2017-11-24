@@ -99,7 +99,7 @@
 
 ;;pinta el score en el mundo
 (define (fig-score x)
-  (text (string-append "Score: (number->string (calc-score x 0))) 20 "white"))
+  (text (string-append "Score: " (number->string (calc-score x 0))) 20 "white"))
 
 (define (calc-score serpiente n)
 (cond
