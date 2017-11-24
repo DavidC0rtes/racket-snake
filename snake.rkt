@@ -223,16 +223,20 @@
 ;Ejemplo:
 (define (tecla w kev)
   (cond
-    [(or
-      (key=? kev "down")
-      (key=? kev "up")
-      (key=? kev "left")
-      (key=? kev "right"))
-     (make-world (make-snake (snake-segs (world-snake w)) kev)
-                 (world-fruta w) (world-score w))]
-    [(key=? kev "f") WORLD-0]
+    [(and (key=? kev "up") (string=? (snake-dir (world-snake w)) "down"))
+     (make-world (make-snake (snake-segs (world-snake w)) "down") (world-fruta w) (world-score w))]
+    
+    [(and (key=? kev "down") (string=? (snake-dir (world-snake w)) "up"))
+     (make-world (make-snake (snake-segs (world-snake w)) "up") (world-fruta w) (world-score w))]
+    
+    [(and (key=? kev "left") (string=? (snake-dir (world-snake w)) "right"))
+     (make-world (make-snake (snake-segs (world-snake w)) "right") (world-fruta w) (world-score w))]
+    
+    [(and (key=? kev "right") (string=? (snake-dir (world-snake w)) "left"))
+     (make-world (make-snake (snake-segs (world-snake w)) "left") (world-fruta w) (world-score w))]
+    
     [else
-     w]))
+     (make-world (make-snake (snake-segs (world-snake w)) kev) (world-fruta w) (world-score w))]))
  
   
 (define (main w)
