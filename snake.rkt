@@ -1,6 +1,7 @@
 ;;Snake
 (require 2htdp/universe)
 (require 2htdp/image)
+(require 2htdp/batch-io)
 
 ;;::::::::::::::::::DEFINICION DE ESTRUCTURAS::::::::::::::::::::::::::::::::::::
 ;world es una estructura,representa el estado del mundo, compuesta por otras estructuras; snake y fruta
@@ -42,7 +43,7 @@
 (define snake2 (make-snake segs2 'up))
 (define snake3 (make-snake segs3 'up))
 ;(define world1 (make-world snake1 food1))
-;(define world2 (make-world snake2 food1)) ; eating
+(define world2 (make-world snake2 food1 10)) ; eating
 
 
 
@@ -113,7 +114,7 @@
 ;dibuja la última escena
 (define (last-scene w)
   (place-image
-  (above
+   (above
    (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
    (fig-score (snake-segs (world-snake w))))
    (/ ANCHO 2) (/ LARGO 2)
@@ -200,10 +201,12 @@
 ;;evalúa si el jugador ha perdido.
 ;;es decir, si choca con un muro o si choca consigo mismo
 (define (end? w)
-  (or (world-collision? w) (self-collision? w)))
-
+  (cond
+    [(eqv? (save-game w) "puntajes.txt") true]
+    [else false]))
+  ;(or (world-collision? w) (self-collision? w)))
        
-;________________________________________FUNCIONES LOGICAS_____________________________________
+;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
 ;Contrato: next-world: world -> world. donde w es una estructura.
 ;Propósito: Funcion que calcula el nuevo estado del mundo cada tick del reloj
 ;Ejemplo: 
@@ -215,13 +218,12 @@
                     (snake-grow (world-snake w))
                     (make-posn (random N-COLUMNAS)
                                (random N-FILAS))
-                    (score++ (snake-segs (world-snake w))))]
+                    (calc-score (snake-segs (world-snake w)) 0))]
     [else
      (make-world (snake-slither (world-snake w))
                  (world-fruta w) (world-score w))]))
 
-;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev
-;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
+;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev ;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
 ;Ejemplo:
 (define (tecla w kev)
   (cond
@@ -239,12 +241,24 @@
     
     [else
      (make-world (make-snake (snake-segs (world-snake w)) kev) (world-fruta w) (world-score w))]))
- 
+
+;Contrato: save-game: w -> .txt
+;Propósito: Guardar el puntaje del jugador
+;Ejemplo
+;(save-game WORLD-0) Debe retornar un .txt en el directorio del juego con el puntaje
+(define (crear-txt w)
+ (write-file "puntajes.txt" (number->string (calc-score (snake-segs (world-snake w)) 0))))
+
+(define (save-game w)
+  (cond
+    [(or (world-collision? w) (self-collision? w)) (crear-txt w)]
+    [else w]))
   
+;;FUNCIÓN PRINCIPAL  
 (define (main w)
   (big-bang w
   [to-draw render]
   [on-tick next-world TICK]
   [on-key tecla]
   [stop-when end? last-scene]
-[name "snek"]))
+  [name "snake"]))
