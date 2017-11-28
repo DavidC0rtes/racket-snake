@@ -1,0 +1,5 @@
+Condiciones para que el bono aparezca.
+(define (bono? w)
+ (and (comiendo-bonus? w) (= (remainder (+ (world-score w) 1) 5) 0)))
+;instancia para testear bono?
+(define w9 (make-world (make-snake (list (make-posn 1 2) (make-posn 2 3) (make-posn 3 6)) "up") food1 4 (make-posn 1 2)))
