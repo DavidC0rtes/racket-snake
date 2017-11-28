@@ -1,63 +1,61 @@
-;;Snake
+;; The first three lines of this file were inserted by DrRacket. They record metadata
+;; about the language level of this file in a form that our tools can easily process.
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname |Snek a rekt|) (read-case-sensitive #t) (teachpacks ()) (htdp-settings #(#t constructor repeating-decimal #t #t none #f () #f)))
+;fuckin snake. World es el rey, snake  fruta son sus lacayos.
 (require 2htdp/universe)
 (require 2htdp/image)
-(require 2htdp/batch-io)
 
-;;::::::::::::::::::DEFINICION DE ESTRUCTURAS::::::::::::::::::::::::::::::::::::
-;world es una estructura,representa el estado del mundo, compuesta por otras estructuras; snake y fruta
-(define-struct world (snake fruta score))
+;fuckin estructuras
+;world es una estructura, compuesta por otras estructuras; snake y fruta
+(define-struct world (snake fruta bonus))
 ;fruta es una estructura. Pos representa la celda que esta ocupando dentro del canvas posn(x,y)
 (define-struct fruta (pos))
-;score es una estructura unitaria, n es un número y representa el puntaje del jugador
-(define-struct score (n))
+;bonus es una estructura. Posi representa la celda que esta ocupando dentro del canvas posn (x,y)
+(define-struct bonus (posi))
 ;snake es una estructura. dir es un string, representa la direccion de un segmento del snake.
 ;pos es la celda que ocupa en coordenadas posn(x,y)
 (define-struct snake (segs dir))
 
 
-;::::::::::::::::::::::::DEFINICION DE CONSTANTES:::::::::::::::::::::::::::::::::::
+;fuckin constantes
 
-(define CELDA 15)
-(define N-FILAS 35)
-(define N-COLUMNAS 35)
-(define TICK 0.07)
+(define CELDA 10)
+(define N-FILAS 30)
+(define N-COLUMNAS 30)
 
 (define ANCHO (* N-COLUMNAS CELDA))
 (define LARGO (* N-FILAS CELDA))
 
-(define FONDO (empty-scene ANCHO LARGO "black"))
+(define FONDO (empty-scene ANCHO LARGO))
 
-(define BODY (rectangle (/ CELDA 2) (/ CELDA 2) "solid" "white" ))
-(define APPLE (rectangle (/ CELDA 2) (/ CELDA 2) "solid" "green"))
+(define BODY (circle (/ CELDA 2) "solid" "red" ))
+(define APPLE (circle (/ CELDA 2) "solid" "green"))
+(define BONO (circle (/ CELDA 2) "solid" "yellow"))
+
 
 (define WORLD-0
   (make-world (make-snake (list (make-posn 2 6) ) "right")
-  (make-posn 1 15) (make-score 0)))
-  
+  (make-posn 1 15)  (make-posn 2 4)))
 ;::::::::::::::::::::::::::::::::::::::::VARIABLES DE TESTEO:::::::::::::::::::::::::::::::::::::::::::::::::::
 (define food1 (make-posn 2 5))
 (define segs1 (list (make-posn 2 6))) ; one-segment snake
-(define segs2 (list (make-posn 2 5) (make-posn 3 5)))
-(define segs3 (list (make-posn 2 5) (make-posn 3 5) (make-posn 3 1)))
-(define snake1 (make-snake segs1 'up))
-(define snake2 (make-snake segs2 'up))
-(define snake3 (make-snake segs3 'up))
-;(define world1 (make-world snake1 food1))
-(define world2 (make-world snake2 food1 10)) ; eating
-
-
-
+(define segs2 (list (make-posn 2 5) (make-posn 3 5))) ; two-segment snake
+(define snake1 (make-snake segs1 'up ))
+(define snake2 (make-snake segs2 'up ))
+(define world1 (make-world snake1 food1  (make-posn (random N-COLUMNAS)
+                               (random N-FILAS))))
+(define world2 (make-world snake2 food1  (make-posn (random N-COLUMNAS)
+                               (random N-FILAS)))) ; eating
 ;:::::::::::::::::::::::::::::::::::::::::FUNCIONES DEL MUNDO::::::::::::::::::::::::::::::::::::::::::::::::::::
-;;FUNCIONES PARA RENDERIZAR
+;;__________________FUNCIONES PARA RENDERIZAR_______________________________
 
 ;Contrato: render: world -> image
 ;Propósito: Renderizar el estado del mundo
 (define (render w)
-  (place-image
-   (fig-score (snake-segs (world-snake w)))
-   480 15
   (snake+img (world-snake w)
+             
              (food+img (world-fruta w)
+                        (bono+img (world-bonus w)
                        FONDO))))
 
 ;Contrato: imagen-en-celda: imagen numero numero imagen -> imagen
@@ -93,32 +91,23 @@
 (define (food+img fruta img)
   (imagen-en-celda APPLE (posn-x fruta) (posn-y fruta) img))
 
-;Contrato: score+img: number --> image
-;Propósito: Hacer que el puntaje aparezca durante el juego y se actualice
-(define (score+img score img)
-  (imagen-en-celda (fig-score (snake-segs score)) 510 15 img))
 
-;;pinta el score en el mundo
-(define (fig-score x)
-  (text (string-append "Score: " (number->string (calc-score x 0))) 20 "white"))
+;dibujar bono
+(define (bono+img bonus img)
+    (imagen-en-celda BONO (posn-x bonus) (posn-y bonus) img))
+;Contrato
+(define (Bonotest w)
+  (cond
+    [ (and (comiendo? w) (= (length (snake-segs (world-snake w))) 4)) (bono+img BONO)]
+    [ (and (comiendo? w) (= (length (snake-segs (world-snake w))) 4)) (bono+img BONO)]
+    [ (and (comiendo? w) (= (length (snake-segs (world-snake w))) 4)) (bono+img BONO)]
+    [ (and (comiendo? w) (= (length (snake-segs (world-snake w))) 4)) (bono+img BONO)]
+    [else w]
+    ))
 
-(define (calc-score serpiente n)
-(cond
-  [(empty? serpiente) n]
-  [(<= (length serpiente) 1) n]
-  [else (calc-score (rest serpiente) (+ n 1))]))
 
-(define (score++ serpiente)
-  (make-score (calc-score serpiente 0) ))
-  
-;dibuja la última escena
-(define (last-scene w)
-  (place-image
-   (above
-   (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
-   (fig-score (snake-segs (world-snake w))))
-   (/ ANCHO 2) (/ LARGO 2)
-   (render w)))
+
+   
 ;;____________________________FUNCIONES PARA EL MOVIMIENTO______________________________
 ;Contrato: snake-grow: snake -> snake. Donde snake es una estructura
 ;Proposito: añade un nuevo segmento a la serpiente en la "cabecera" a una direccion dada
@@ -196,17 +185,8 @@
 (define (in-bounds? p)
   (and (>= (posn-x p) 0) (< (posn-x p) N-COLUMNAS)
        (>= (posn-y p) 0) (< (posn-y p) N-FILAS)))
-       
-  
-;;evalúa si el jugador ha perdido.
-;;es decir, si choca con un muro o si choca consigo mismo
-(define (end? w)
-  (cond
-    [(eqv? (save-game w) "puntajes.txt") true]
-    [else false]))
-  ;(or (world-collision? w) (self-collision? w)))
-       
-;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
+
+;________________________________________FUNCIONES LOGICAS_____________________________________
 ;Contrato: next-world: world -> world. donde w es una estructura.
 ;Propósito: Funcion que calcula el nuevo estado del mundo cada tick del reloj
 ;Ejemplo: 
@@ -217,48 +197,30 @@
     [(comiendo? w) (make-world
                     (snake-grow (world-snake w))
                     (make-posn (random N-COLUMNAS)
-                               (random N-FILAS))
-                    (calc-score (snake-segs (world-snake w)) 0))]
+                               (random N-FILAS)) (Bonotest w) )]
     [else
      (make-world (snake-slither (world-snake w))
-                 (world-fruta w) (world-score w))]))
+                 (world-fruta w)  (world-bonus w))]))
 
-;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev ;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
+;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev
+;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
 ;Ejemplo:
 (define (tecla w kev)
   (cond
-    [(and (key=? kev "up") (string=? (snake-dir (world-snake w)) "down"))
-     (make-world (make-snake (snake-segs (world-snake w)) "down") (world-fruta w) (world-score w))]
-    
-    [(and (key=? kev "down") (string=? (snake-dir (world-snake w)) "up"))
-     (make-world (make-snake (snake-segs (world-snake w)) "up") (world-fruta w) (world-score w))]
-    
-    [(and (key=? kev "left") (string=? (snake-dir (world-snake w)) "right"))
-     (make-world (make-snake (snake-segs (world-snake w)) "right") (world-fruta w) (world-score w))]
-    
-    [(and (key=? kev "right") (string=? (snake-dir (world-snake w)) "left"))
-     (make-world (make-snake (snake-segs (world-snake w)) "left") (world-fruta w) (world-score w))]
-    
+    [(or
+      (key=? kev "down")
+      (key=? kev "up")
+      (key=? kev "left")
+      (key=? kev "right"))
+     (make-world (make-snake (snake-segs (world-snake w)) kev)
+                 (world-fruta w) (world-bonus w))]
+    [(key=? kev "f") WORLD-0]
     [else
-     (make-world (make-snake (snake-segs (world-snake w)) kev) (world-fruta w) (world-score w))]))
-
-;Contrato: save-game: w -> .txt
-;Propósito: Guardar el puntaje del jugador
-;Ejemplo
-;(save-game WORLD-0) Debe retornar un .txt en el directorio del juego con el puntaje
-(define (crear-txt w)
- (write-file "puntajes.txt" (number->string (calc-score (snake-segs (world-snake w)) 0))))
-
-(define (save-game w)
-  (cond
-    [(or (world-collision? w) (self-collision? w)) (crear-txt w)]
-    [else w]))
+     w]))
   
-;;FUNCIÓN PRINCIPAL  
-(define (main w)
-  (big-bang w
+(big-bang WORLD-0
   [to-draw render]
-  [on-tick next-world TICK]
+  [on-tick next-world 0.150]
   [on-key tecla]
-  [stop-when end? last-scene]
-  [name "snake"]))
+  [name "snek"]
+  )
