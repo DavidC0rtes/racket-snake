@@ -1,0 +1,27 @@
+#lang racket
+
+
+(require 2htdp/batch-io)
+
+(define-struct scores (nombre puntaje)#:transparent)
+
+(write-file "datos.csv" "user,10\nUser2,9")
+
+(define texto (read-file "datos.csv"))
+
+(define lines (string-split texto "\n"))
+
+;(string-split (first lines) ",")
+
+(define (list->score l) (make-scores (first l)
+                                     (string->number(first (rest  l)))))
+
+(list->score (string-split (first lines) ","))
+
+(define (list->list-score l)
+  (cond
+    [(empty? l) empty]
+    [else
+     (cons (list->score (string-split (first l) ",")) (list->list-score (rest l)))]))
+
+(list->list-score lines)
