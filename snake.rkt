@@ -1,3 +1,4 @@
+#lang racket
 ;;Snake
 (require 2htdp/universe)
 (require 2htdp/image)
@@ -5,14 +6,18 @@
 
 ;;::::::::::::::::::DEFINICION DE ESTRUCTURAS::::::::::::::::::::::::::::::::::::
 ;world es una estructura,representa el estado del mundo, compuesta por otras estructuras; snake y fruta
-(define-struct world (snake fruta score))
+(define-struct world (snake fruta bonus score))
 ;fruta es una estructura. Pos representa la celda que esta ocupando dentro del canvas posn(x,y)
-(define-struct fruta (pos))
+(define-struct fruta (posn))
+
+(define-struct bonus (posn t))
 ;score es una estructura unitaria, n es un número y representa el puntaje del jugador
 (define-struct score (n))
 ;snake es una estructura. dir es un string, representa la direccion de un segmento del snake.
 ;pos es la celda que ocupa en coordenadas posn(x,y)
 (define-struct snake (segs dir))
+;posn es una estructura que representa las coordenadas dentro del canvas (x, y)
+(define-struct posn (x y))
 
 
 ;::::::::::::::::::::::::DEFINICION DE CONSTANTES:::::::::::::::::::::::::::::::::::
@@ -21,18 +26,26 @@
 (define N-FILAS 35)
 (define N-COLUMNAS 35)
 (define TICK 0.07)
+(define EXP 4)
 
 (define ANCHO (* N-COLUMNAS CELDA))
 (define LARGO (* N-FILAS CELDA))
 
 (define FONDO (empty-scene ANCHO LARGO "black"))
 
-(define BODY (rectangle (/ CELDA 2) (/ CELDA 2) "solid" "white" ))
-(define APPLE (rectangle (/ CELDA 2) (/ CELDA 2) "solid" "green"))
+(define BODY (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "white" ))
+(define APPLE (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "green"))
+(define BONO (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "yellow"))
+
+(define (tiempo-bonus w)
+  (bonus-t (world-bonus w)))
+
+(define (loc-bonus w)
+  (bonus-posn (world-bonus w)))
 
 (define WORLD-0
   (make-world (make-snake (list (make-posn 2 6) ) "right")
-  (make-posn 1 15) (make-score 0)))
+  (make-posn 1 15) (make-bonus (make-posn 400 10) EXP)(make-score 0)))
   
 ;::::::::::::::::::::::::::::::::::::::::VARIABLES DE TESTEO:::::::::::::::::::::::::::::::::::::::::::::::::::
 (define food1 (make-posn 2 5))
@@ -43,7 +56,7 @@
 (define snake2 (make-snake segs2 'up))
 (define snake3 (make-snake segs3 'up))
 ;(define world1 (make-world snake1 food1))
-(define world2 (make-world snake2 food1 10)) ; eating
+;(define world2 (make-world snake2 food1 10)) ; eating
 
 
 
@@ -155,13 +168,15 @@
     [(empty? (rest loseg)) empty]
     [else
      (cons (first loseg) (nuke-last (rest loseg)))]))
-
 ;_____________________________________COLISIONES____________________________________
 ;Contrato: comiendo?: world -> boolean. Donde w es una estructura
 ;Proposito: Funcion que determina si la cabecera de la serpiente colisiona con una fruta
 ;Ejemplo
 (define (comiendo? w)
     (posn=? (first (snake-segs (world-snake w))) (world-fruta w)))
+
+(define (comiendo-bonus? w)
+    (posn=? (first (snake-segs (world-snake w))) (loc-bonus w)))
 
 ;Contrato: posn=?: posn posn -> boolean. Donde a y b son puntos 2d
 ;Proposito: Funcion que determina si dos puntos estan sobrelapados
@@ -207,6 +222,15 @@
   ;(or (world-collision? w) (self-collision? w)))
        
 ;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
+(define (zerobonus? w)
+  (zero? (tiempo-bonus w)))
+
+(define (sub1bonus w)
+  (cond
+    [(not (zerobonus? w)) (sub1 (tiempo-bonus w))]
+    [else
+     (sub1bonus w)]))
+
 ;Contrato: next-world: world -> world. donde w es una estructura.
 ;Propósito: Funcion que calcula el nuevo estado del mundo cada tick del reloj
 ;Ejemplo: 
@@ -218,29 +242,31 @@
                     (snake-grow (world-snake w))
                     (make-posn (random N-COLUMNAS)
                                (random N-FILAS))
+                    (make-bonus(make-posn (random N-COLUMNAS)
+                               (random N-FILAS))EXP)
                     (calc-score (snake-segs (world-snake w)) 0))]
     [else
      (make-world (snake-slither (world-snake w))
-                 (world-fruta w) (world-score w))]))
+                 (world-fruta w) (world-bonus w) (world-score w))]))
 
 ;Contrato: tecla: world key-event -> world. Donde w es una estructura y kev ;Propósito: Funcion que determina el key-event para el movimiento de la serpiente con las teclas
 ;Ejemplo:
 (define (tecla w kev)
   (cond
     [(and (key=? kev "up") (string=? (snake-dir (world-snake w)) "down"))
-     (make-world (make-snake (snake-segs (world-snake w)) "down") (world-fruta w) (world-score w))]
+     (make-world (make-snake (snake-segs (world-snake w)) "down") (world-fruta w) (world-bonus w) (world-score w))]
     
     [(and (key=? kev "down") (string=? (snake-dir (world-snake w)) "up"))
-     (make-world (make-snake (snake-segs (world-snake w)) "up") (world-fruta w) (world-score w))]
+     (make-world (make-snake (snake-segs (world-snake w)) "up") (world-fruta w) (world-bonus w) (world-score w))]
     
     [(and (key=? kev "left") (string=? (snake-dir (world-snake w)) "right"))
-     (make-world (make-snake (snake-segs (world-snake w)) "right") (world-fruta w) (world-score w))]
+     (make-world (make-snake (snake-segs (world-snake w)) "right") (world-fruta w) (world-bonus w) (world-score w))]
     
     [(and (key=? kev "right") (string=? (snake-dir (world-snake w)) "left"))
-     (make-world (make-snake (snake-segs (world-snake w)) "left") (world-fruta w) (world-score w))]
+     (make-world (make-snake (snake-segs (world-snake w)) "left") (world-fruta w) (world-bonus w) (world-score w))]
     
     [else
-     (make-world (make-snake (snake-segs (world-snake w)) kev) (world-fruta w) (world-score w))]))
+     (make-world (make-snake (snake-segs (world-snake w)) kev) (world-fruta w) (world-bonus w) (world-score w))]))
 
 ;Contrato: save-game: w -> .txt
 ;Propósito: Guardar el puntaje del jugador
