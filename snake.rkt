@@ -6,18 +6,19 @@
 
 ;;::::::::::::::::::DEFINICION DE ESTRUCTURAS::::::::::::::::::::::::::::::::::::
 ;world es una estructura,representa el estado del mundo, compuesta por otras estructuras; snake y fruta
-(define-struct world (snake fruta bonus score))
+(define-struct world (snake fruta bonus score) #:transparent)
 ;fruta es una estructura. Pos representa la celda que esta ocupando dentro del canvas posn(x,y)
-(define-struct fruta (posn))
-
-(define-struct bonus (posn t))
+(define-struct fruta (posn) #:transparent)
+;bonus es una estructura. Es la fruta bonus del juego, contiene una posición dentro del canvas (posn)
+;y un tiempo en pantalla expresado en segundos (t)
+(define-struct bonus (posn t) #:transparent)
 ;score es una estructura unitaria, n es un número y representa el puntaje del jugador
-(define-struct score (n))
+(define-struct score (n) #:transparent)
 ;snake es una estructura. dir es un string, representa la direccion de un segmento del snake.
 ;pos es la celda que ocupa en coordenadas posn(x,y)
-(define-struct snake (segs dir))
+(define-struct snake (segs dir) #:transparent)
 ;posn es una estructura que representa las coordenadas dentro del canvas (x, y)
-(define-struct posn (x y))
+(define-struct posn (x y) #:transparent)
 
 
 ;::::::::::::::::::::::::DEFINICION DE CONSTANTES:::::::::::::::::::::::::::::::::::
@@ -58,8 +59,6 @@
 ;(define world1 (make-world snake1 food1))
 ;(define world2 (make-world snake2 food1 10)) ; eating
 
-
-
 ;:::::::::::::::::::::::::::::::::::::::::FUNCIONES DEL MUNDO::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;;FUNCIONES PARA RENDERIZAR
 
@@ -71,7 +70,8 @@
    480 15
   (snake+img (world-snake w)
              (food+img (world-fruta w)
-                       FONDO))))
+             (bono+img w
+                       FONDO)))))
 
 ;Contrato: imagen-en-celda: imagen numero numero imagen -> imagen
 ;Proposito:  dibuja imagen1 en el centro de una celda (x,y) dada en la imagen2
@@ -105,6 +105,11 @@
 ;Ejemplo: 
 (define (food+img fruta img)
   (imagen-en-celda APPLE (posn-x fruta) (posn-y fruta) img))
+
+(define (bono+img w img)
+  (cond
+    [(> (tiempo-bonus w) 0) (imagen-en-celda BONO (posn-x (loc-bonus w)) (posn-y (loc-bonus w)) img)]
+    [else FONDO]))
 
 ;Contrato: score+img: number --> image
 ;Propósito: Hacer que el puntaje aparezca durante el juego y se actualice
@@ -222,14 +227,15 @@
   ;(or (world-collision? w) (self-collision? w)))
        
 ;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
+;el bonus expiró?
 (define (zerobonus? w)
-  (zero? (tiempo-bonus w)))
-
-(define (sub1bonus w)
   (cond
-    [(not (zerobonus? w)) (sub1 (tiempo-bonus w))]
-    [else
-     (sub1bonus w)]))
+    [(zero? (tiempo-bonus w)) true]
+    [(<= (tiempo-bonus w) 4) 4]
+    [else false]
+  ))
+;resta uno al tiempo de expiración del bonus
+
 
 ;Contrato: next-world: world -> world. donde w es una estructura.
 ;Propósito: Funcion que calcula el nuevo estado del mundo cada tick del reloj
@@ -242,9 +248,9 @@
                     (snake-grow (world-snake w))
                     (make-posn (random N-COLUMNAS)
                                (random N-FILAS))
-                    (make-bonus(make-posn (random N-COLUMNAS)
-                               (random N-FILAS))EXP)
+                    (make-bonus (loc-bonus w) (sub1 (tiempo-bonus w)))
                     (calc-score (snake-segs (world-snake w)) 0))]
+    
     [else
      (make-world (snake-slither (world-snake w))
                  (world-fruta w) (world-bonus w) (world-score w))]))
@@ -287,4 +293,4 @@
   [on-tick next-world TICK]
   [on-key tecla]
   [stop-when end? last-scene]
-  [name "snake"]))
+  [name "culebrita"]))
