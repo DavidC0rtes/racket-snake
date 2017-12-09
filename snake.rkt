@@ -46,7 +46,7 @@
 
 (define WORLD0
   (make-world (make-snake (list (make-posn 2 6) ) "right")
-  (make-posn 1 15) (make-bonus (make-posn 1 10) EXP)(make-score 0)))
+              (make-posn 1 15) (make-bonus (make-posn 1 10) EXP)(make-score 0)))
   
 ;::::::::::::::::::::::::::::::::::::::::VARIABLES DE TESTEO:::::::::::::::::::::::::::::::::::::::::::::::::::
 (define food1 (make-posn 2 5))
@@ -78,8 +78,8 @@
       (fig-score (snake-segs (world-snake w)))
       480 15
       (snake+img (world-snake w)
-             (food+img (world-fruta w)
-                       FONDO)))]))
+                 (food+img (world-fruta w)
+                           FONDO)))]))
 
 ;Contrato: imagen-en-celda: imagen numero numero imagen -> imagen
 ;Proposito:  dibuja imagen1 en el centro de una celda (x,y) dada en la imagen2
@@ -127,10 +127,10 @@
   (text (string-append "Score: " (number->string (calc-score x 0))) 20 "white"))
 
 (define (calc-score serpiente n)
-(cond
-  [(empty? serpiente) n]
-  [(<= (length serpiente) 1) n]
-  [else (calc-score (rest serpiente) (+ n 1))]))
+  (cond
+    [(empty? serpiente) n]
+    [(<= (length serpiente) 1) n]
+    [else (calc-score (rest serpiente) (+ n 1))]))
 
 (define (score++ serpiente)
   (make-score (calc-score serpiente 0) ))
@@ -139,8 +139,8 @@
 (define (last-scene w)
   (place-image
    (above
-   (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
-   (fig-score (snake-segs (world-snake w))))
+    (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
+    (fig-score (snake-segs (world-snake w))))
    (/ ANCHO 2) (/ LARGO 2)
    (render w)))
 ;;____________________________FUNCIONES PARA EL MOVIMIENTO______________________________
@@ -149,7 +149,7 @@
 ;Ejemplo: 
 (define (snake-grow snake)
   (make-snake (cons (new-seg (first (snake-segs snake)) (snake-dir snake))
-              (snake-segs snake))
+                    (snake-segs snake))
               (snake-dir snake)))
 
 ;Contrato: new-seg: snake-dir -> snake-seg
@@ -184,10 +184,10 @@
 ;Proposito: Funcion que determina si la cabecera de la serpiente colisiona con una fruta
 ;Ejemplo
 (define (comiendo? w)
-    (posn=? (first (snake-segs (world-snake w))) (world-fruta w)))
+  (posn=? (first (snake-segs (world-snake w))) (world-fruta w)))
 
 (define (comiendo-bonus? w)
-    (posn=? (first (snake-segs (world-snake w))) (loc-bonus w)))
+  (posn=? (first (snake-segs (world-snake w))) (loc-bonus w)))
 
 ;Contrato: posn=?: posn posn -> boolean. Donde a y b son puntos 2d
 ;Proposito: Funcion que determina si dos puntos estan sobrelapados
@@ -230,7 +230,7 @@
   (cond
     [(eqv? (save-game w) "puntajes.txt") true]
     [else false]))
-  ;(or (world-collision? w) (self-collision? w)))
+;(or (world-collision? w) (self-collision? w)))
        
 ;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
 ;el bonus expiró?
@@ -239,8 +239,10 @@
     [(zero? (tiempo-bonus w)) true]
     [(<= (tiempo-bonus w) 4) 4]
     [else false]
-  ))
-;resta uno al tiempo de expiración del bonus
+    ))
+;reaparece el bonus
+(define (resetbonus w)
+  (<= (tiempo-bonus w) (* EXP -1)))
 
 
 ;Contrato: next-world: world -> world. donde w es una estructura.
@@ -254,7 +256,11 @@
                     (snake-grow (world-snake w))
                     (make-posn (random N-COLUMNAS)
                                (random N-FILAS))
-                    (make-bonus (loc-bonus w) (sub1 (tiempo-bonus w)))
+                    (make-bonus (loc-bonus w)
+                                (cond
+                                  [(resetbonus w) EXP]
+                                  [else
+                                   (sub1 (tiempo-bonus w))]))
                     (calc-score (snake-segs (world-snake w)) 0))]
     
     [else
@@ -285,7 +291,7 @@
 ;Ejemplo
 ;(save-game WORLD-0) Debe retornar un .txt en el directorio del juego con el puntaje
 (define (crear-txt w)
- (write-file "puntajes.txt" (number->string (calc-score (snake-segs (world-snake w)) 0))))
+  (write-file "puntajes.txt" (number->string (calc-score (snake-segs (world-snake w)) 0))))
 
 (define (save-game w)
   (cond
@@ -295,8 +301,8 @@
 ;;FUNCIÓN PRINCIPAL  
 (define (main w)
   (big-bang w
-  [to-draw render]
-  [on-tick next-world TICK]
-  [on-key tecla]
-  [stop-when end? last-scene]
-[name "culebrita"]))
+    [to-draw render]
+    [on-tick next-world TICK]
+    [on-key tecla]
+    [stop-when end? last-scene]
+    [name "culebrita"]))
