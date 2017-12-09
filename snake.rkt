@@ -128,7 +128,7 @@
     [(comiendo-bonus? w) (text (string-append "Score: " (number->string (+ (calc-score x 0) 2))) 20 "white")]
     [else
      (text (string-append "Score: " (number->string (calc-score x 0))) 20 "white")]))
-
+;calcula el puntaje de acuerdo al numero de segmentos -1
 (define (calc-score serpiente n)
   (cond
     [(empty? serpiente) n]
@@ -262,7 +262,8 @@
                                   [else
                                    (sub1 (tiempo-bonus w))]))
                     (calc-score (snake-segs (world-snake w)) 0))]
-    
+;la serpiente es capaz de crecer dos veces porque se hace el llamado a snake-grow
+;semi-recursivamente, evalua snake-grow si misma evaluada en el cuerpo de la serpiente
     [(comiendo-bonus? w) (make-world
                           (snake-grow (snake-grow (world-snake w)))
                           (make-posn (random N-COLUMNAS)
