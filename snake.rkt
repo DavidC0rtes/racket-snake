@@ -262,8 +262,9 @@
                                   [else
                                    (sub1 (tiempo-bonus w))]))
                     (calc-score (snake-segs (world-snake w)) 0))]
+    
     [(comiendo-bonus? w) (make-world
-                          (snake-grow (world-snake w))
+                          (snake-grow (snake-grow (world-snake w)))
                           (make-posn (random N-COLUMNAS)
                                      (random N-FILAS))
                           (make-bonus (make-posn (random N-COLUMNAS)(random N-FILAS))
