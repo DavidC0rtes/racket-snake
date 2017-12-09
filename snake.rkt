@@ -44,9 +44,9 @@
 (define (loc-bonus w)
   (bonus-posn (world-bonus w)))
 
-(define WORLD-0
+(define WORLD0
   (make-world (make-snake (list (make-posn 2 6) ) "right")
-  (make-posn 1 15) (make-bonus (make-posn 400 10) EXP)(make-score 0)))
+  (make-posn 1 15) (make-bonus (make-posn 1 10) EXP)(make-score 0)))
   
 ;::::::::::::::::::::::::::::::::::::::::VARIABLES DE TESTEO:::::::::::::::::::::::::::::::::::::::::::::::::::
 (define food1 (make-posn 2 5))
@@ -65,13 +65,21 @@
 ;Contrato: render: world -> image
 ;Propósito: Renderizar el estado del mundo
 (define (render w)
-  (place-image
-   (fig-score (snake-segs (world-snake w)))
-   480 15
-  (snake+img (world-snake w)
+  (cond
+    [(>= (tiempo-bonus w) 0) (place-image
+                              (fig-score (snake-segs (world-snake w)))
+                              480 15
+                              (snake+img (world-snake w)
+                                         (food+img (world-fruta w)
+                                                   (bono+img w
+                                                             FONDO))))]
+    [else
+     (place-image
+      (fig-score (snake-segs (world-snake w)))
+      480 15
+      (snake+img (world-snake w)
              (food+img (world-fruta w)
-             (bono+img w
-                       FONDO)))))
+                       FONDO)))]))
 
 ;Contrato: imagen-en-celda: imagen numero numero imagen -> imagen
 ;Proposito:  dibuja imagen1 en el centro de una celda (x,y) dada en la imagen2
@@ -107,9 +115,7 @@
   (imagen-en-celda APPLE (posn-x fruta) (posn-y fruta) img))
 
 (define (bono+img w img)
-  (cond
-    [(> (tiempo-bonus w) 0) (imagen-en-celda BONO (posn-x (loc-bonus w)) (posn-y (loc-bonus w)) img)]
-    [else FONDO]))
+  (imagen-en-celda BONO (posn-x (loc-bonus w)) (posn-y (loc-bonus w)) img))
 
 ;Contrato: score+img: number --> image
 ;Propósito: Hacer que el puntaje aparezca durante el juego y se actualice
@@ -242,8 +248,8 @@
 ;Ejemplo: 
 (define (next-world w)
   (cond
-    [(world-collision? w) WORLD-0]
-    [(self-collision? w) WORLD-0]
+    [(world-collision? w) WORLD0]
+    [(self-collision? w) WORLD0]
     [(comiendo? w) (make-world
                     (snake-grow (world-snake w))
                     (make-posn (random N-COLUMNAS)
@@ -293,4 +299,4 @@
   [on-tick next-world TICK]
   [on-key tecla]
   [stop-when end? last-scene]
-  [name "culebrita"]))
+[name "culebrita"]))
