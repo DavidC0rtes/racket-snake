@@ -67,7 +67,7 @@
 (define (render w)
   (cond
     [(>= (tiempo-bonus w) 0) (place-image
-                              (fig-score (snake-segs (world-snake w)))
+                              (fig-score (snake-segs (world-snake w)) w)
                               480 15
                               (snake+img (world-snake w)
                                          (food+img (world-fruta w)
@@ -75,7 +75,7 @@
                                                              FONDO))))]
     [else
      (place-image
-      (fig-score (snake-segs (world-snake w)))
+      (fig-score (snake-segs (world-snake w)) w)
       480 15
       (snake+img (world-snake w)
                  (food+img (world-fruta w)
@@ -119,28 +119,28 @@
 
 ;Contrato: score+img: number --> image
 ;Propósito: Hacer que el puntaje aparezca durante el juego y se actualice
-(define (score+img score img)
-  (imagen-en-celda (fig-score (snake-segs score)) 510 15 img))
+;(define (score+img score img)
+ ; (imagen-en-celda (fig-score (snake-segs score)) 510 15 img))
 
 ;;pinta el score en el mundo
-(define (fig-score x)
-  (text (string-append "Score: " (number->string (calc-score x 0))) 20 "white"))
+(define (fig-score x w)
+  (cond
+    [(comiendo-bonus? w) (text (string-append "Score: " (number->string (+ (calc-score x 0) 2))) 20 "white")]
+    [else
+     (text (string-append "Score: " (number->string (calc-score x 0))) 20 "white")]))
 
 (define (calc-score serpiente n)
   (cond
     [(empty? serpiente) n]
     [(<= (length serpiente) 1) n]
     [else (calc-score (rest serpiente) (+ n 1))]))
-
-(define (score++ serpiente)
-  (make-score (calc-score serpiente 0) ))
   
 ;dibuja la última escena
 (define (last-scene w)
   (place-image
    (above
     (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
-    (fig-score (snake-segs (world-snake w))))
+    (fig-score (snake-segs (world-snake w)) w))
    (/ ANCHO 2) (/ LARGO 2)
    (render w)))
 ;;____________________________FUNCIONES PARA EL MOVIMIENTO______________________________
@@ -262,6 +262,13 @@
                                   [else
                                    (sub1 (tiempo-bonus w))]))
                     (calc-score (snake-segs (world-snake w)) 0))]
+    [(comiendo-bonus? w) (make-world
+                          (snake-grow (world-snake w))
+                          (make-posn (random N-COLUMNAS)
+                                     (random N-FILAS))
+                          (make-bonus (make-posn (random N-COLUMNAS)(random N-FILAS))
+                                      -1)
+                          (+ (calc-score (snake-segs (world-snake w)) 0) 2))]
     
     [else
      (make-world (snake-slither (world-snake w))
