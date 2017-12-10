@@ -73,20 +73,29 @@
 ;Propósito: Renderizar el estado del mundo
 (define (render w)
   (cond
-    [(>= (tiempo-bonus w) 0) (place-image
+    [(>= (tiempo-bonus w) 0)
+     (place-image
+      (name+img)
+      25 15
+      
+     (place-image
                               (fig-score (snake-segs (world-snake w)) w)
                               480 15
                               (snake+img (world-snake w)
                                          (food+img (world-fruta w)
                                                    (bono+img w
-                                                             FONDO))))]
+                                                             FONDO)))))]
     [else
+     (place-image
+      (name+img)
+      25 15
+      
      (place-image
       (fig-score (snake-segs (world-snake w)) w)
       480 15
       (snake+img (world-snake w)
                  (food+img (world-fruta w)
-                           FONDO)))]))
+                           FONDO))))]))
 
 ;Contrato: imagen-en-celda: imagen numero numero imagen -> imagen
 ;Proposito:  dibuja imagen1 en el centro de una celda (x,y) dada en la imagen2
@@ -128,6 +137,8 @@
 ;Propósito: Hacer que el puntaje aparezca durante el juego y se actualice
 ;(define (score+img score img)
  ; (imagen-en-celda (fig-score (snake-segs score)) 510 15 img))
+(define (name+img)
+  (text (text-contents nombre) 20 "cyan"))
 
 ;;pinta el score en el mundo
 (define (fig-score x w)
