@@ -21,7 +21,6 @@
 ;posn es una estructura que representa las coordenadas dentro del canvas (x, y)
 (define-struct posn (x y) #:transparent)
 
-
 ;::::::::::::::::::::::::DEFINICION DE CONSTANTES:::::::::::::::::::::::::::::::::::
 
 (define CELDA 15)
@@ -76,7 +75,7 @@
     [(>= (tiempo-bonus w) 0)
      (place-image
       (name+img)
-      25 15
+      30 15
       
      (place-image
                               (fig-score (snake-segs (world-snake w)) w)
@@ -88,7 +87,7 @@
     [else
      (place-image
       (name+img)
-      25 15
+      30 15
       
      (place-image
       (fig-score (snake-segs (world-snake w)) w)
@@ -320,10 +319,22 @@
 ;Ejemplo
 ;(save-game WORLD-0) Debe retornar un .txt en el directorio del juego con el puntaje
 (define (crear-txt w)
-  (write-file "puntajes.txt" (number->string (calc-score (snake-segs (world-snake w)) 0))))
+  (write-file "puntajes.txt" (string-append (text-contents nombre) (number->string (calc-score (snake-segs (world-snake w)) 0)))))
 
 (define texto (read-file "puntajes.txt"))
 (define lineas (string-split texto "\n"))
+
+(define (lista->score l) (cons (first l) (string->number (first (rest l)))))
+(lista->score (string-split (first lineas) ","))
+
+(define (lista->lista-score l)
+  (cond
+    [(empty? l) empty]
+    [else
+     (cons (lista->score (string-split (first l) ",")) (lista->lista-score (rest l)))]))
+
+(lista->lista-score lineas)
+
 
 (define (save-game w)
   (cond
@@ -332,7 +343,7 @@
 
 ;::::::::::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
 (define header (make-message "
-             Culebrita - FDP
+      Culebrita - FDP
 
 " ))
 
