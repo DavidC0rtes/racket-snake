@@ -3,6 +3,7 @@
 (require 2htdp/universe)
 (require 2htdp/image)
 (require 2htdp/batch-io)
+(require htdp/gui)
 
 ;;::::::::::::::::::DEFINICION DE ESTRUCTURAS::::::::::::::::::::::::::::::::::::
 ;world es una estructura,representa el estado del mundo, compuesta por otras estructuras; snake y fruta
@@ -35,6 +36,12 @@
 (define FONDO (empty-scene ANCHO LARGO "black"))
 
 (define BODY (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "white" ))
+
+(define TEST
+  (underlay
+   (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "gold")
+   (circle (/ (/ CELDA 1.5) 3) "solid" "black")))
+
 (define APPLE (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "green"))
 (define BONO (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "yellow"))
 
@@ -295,6 +302,8 @@
     [else
      (make-world (make-snake (snake-segs (world-snake w)) kev) (world-fruta w) (world-bonus w) (world-score w))]))
 
+;:::::::::::::::::::::::FUNCIONES DE PUNTAJE Y GUARDAR PUNTAJE:::::::::::::::::::::::::::::::::
+
 ;Contrato: save-game: w -> .txt
 ;Propósito: Guardar el puntaje del jugador
 ;Ejemplo
@@ -302,16 +311,51 @@
 (define (crear-txt w)
   (write-file "puntajes.txt" (number->string (calc-score (snake-segs (world-snake w)) 0))))
 
+(define texto (read-file "puntajes.txt"))
+(define lineas (string-split texto "\n"))
+
 (define (save-game w)
   (cond
     [(or (world-collision? w) (self-collision? w)) (crear-txt w)]
     [else w]))
+
+;::::::::::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
+(define header (make-message "
+             Culebrita - FDP
+
+" ))
+
+(define instrucciones
+  (make-message "Mover con las flechas de dirección del teclado.
+Consigue el mayor número de puntos."))
+
+(define nombre
+  (make-text "Nombre:"))
+
+(define (w1 e)
+    (create-window
+      (list
+       (list nombre)
+       (list (make-button "Jugar" main))))#t)
+
+(define (w3 e)
+  (create-window
+   (list
+    (list instrucciones)))#t)
+;ventana principal
+(define w
+    (create-window
+      (list
+       (list header)
+       (list (make-button "Jugar" w1))
+       (list (make-button "Instrucciones" w3))
+       (list (make-button "Salir" (lambda (e) (hide-window w)))))))
   
-;;FUNCIÓN PRINCIPAL  
+;;BIG-BANG  
 (define (main w)
-  (big-bang w
+  (big-bang WORLD0
     [to-draw render]
     [on-tick next-world TICK]
     [on-key tecla]
     [stop-when end? last-scene]
-    [name "culebrita"]))
+    [name "culebrita"]) #t)
