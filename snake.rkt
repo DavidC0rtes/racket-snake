@@ -4,6 +4,7 @@
 (require 2htdp/image)
 (require 2htdp/batch-io)
 (require htdp/gui)
+(require racket/string)
 
 ;;::::::::::::::::::DEFINICION DE ESTRUCTURAS::::::::::::::::::::::::::::::::::::
 ;world es una estructura,representa el estado del mundo, compuesta por otras estructuras; snake y fruta
@@ -245,7 +246,7 @@
 ;;es decir, si choca con un muro o si choca consigo mismo
 (define (end? w)
   (cond
-    [(eqv? (save-game w) "puntajes.txt") true]
+    [(eqv? (highscore w) "puntajes.txt") true]
     [else false]))
 ;(or (world-collision? w) (self-collision? w)))
        
@@ -314,34 +315,35 @@
 
 ;:::::::::::::::::::::::FUNCIONES DE PUNTAJE Y GUARDAR PUNTAJE:::::::::::::::::::::::::::::::::
 
-;Contrato: save-game: w -> .txt
-;Propósito: Guardar el puntaje del jugador
-;Ejemplo
-;(save-game WORLD-0) Debe retornar un .txt en el directorio del juego con el puntaje
-(define (crear-txt w)
-  (write-file "puntajes.txt" (string-append (text-contents nombre) (number->string (calc-score (snake-segs (world-snake w)) 0)))))
-
 (define texto (read-file "puntajes.txt"))
 (define lineas (string-split texto "\n"))
+     
 
-(define (lista->score l) (cons (first l) (string->number (first (rest l)))))
-(lista->score (string-split (first lineas) ","))
+(define (lista->score l) (cons (first l) (string->number
+
+                                          (first(rest l)))))
 
 (define (lista->lista-score l)
-  (cond
-    [(empty? l) empty]
-    [else
-     (cons (lista->score (string-split (first l) ",")) (lista->lista-score (rest l)))]))
-
-(lista->lista-score lineas)
-
-
+       (cond
+         [(empty? l) empty]
+         [else
+          (cons (lista->score (string-split (first l) ",")) (lista->lista-score (rest l)))]))
+     
 (define (save-game w)
-  (cond
-    [(or (world-collision? w) (self-collision? w)) (crear-txt w)]
-    [else w]))
+     (cond
+        [(or (world-collision? w) (self-collision? w)) (crear-txt w)]
+        [else w]))
+               
+(define (crear-txt w)
+  (write-file "puntajes.txt" (string-append (text-contents nombre) "," (number->string (calc-score (snake-segs (world-snake w)) 0)))))
 
-;::::::::::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
+(define (highscore w)
+  (cond
+    [(empty? lineas) empty]
+    [(empty?(rest lineas))
+     (write-file "puntajes.txt" (~a(lista->lista-score lineas)))]
+    [else w]))
+;::::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
 (define header (make-message "
       Culebrita - FDP
 
