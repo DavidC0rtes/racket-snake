@@ -1,13 +1,5 @@
 #lang racket
 ;;Snake
-;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-;;PROYECTO FINAL FUNDAMENTOS DE PROGRAMACIÓN
-;DOCENTE: ANDRES MAURICIO CASTILLO
-;INTEGRANTES:
-;--ALVARADO JUAN FELIPE
-;--CORTES DAVID SANTIAGO
-;--HURTADO JOSE ALEJANDRO
-;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 (require 2htdp/universe)
 (require 2htdp/image)
 (require 2htdp/batch-io)
@@ -155,7 +147,7 @@
 ;;pinta el score en el mundo
 (define (fig-score x w)
   (cond
-    [(comiendo-bonus? w) (text (string-append "Score: " (number->string (+ (calc-score x 0) 2))) 20 "white")]
+    [(comiendo? w (loc-bonus w)) (text (string-append "Score: " (number->string (+ (calc-score x 0) 2))) 20 "white")]
     [else
      (text (string-append "Score: " (number->string (calc-score x 0))) 20 "white")]))
 ;calcula el puntaje de acuerdo al numero de segmentos -1
@@ -222,14 +214,10 @@
      (cons (first loseg) (nuke-last (rest loseg)))]))
 ;_____________________________________COLISIONES____________________________________
 ;Contrato: comiendo?: world -> boolean. Donde w es una estructura
-;Proposito: Funcion que determina si la cabecera de la serpiente colisiona con una fruta
+;Proposito: Funcion abstraida que determina si la cabecera de la serpiente colisiona con una fruta
 ;Ejemplo
-(define (comiendo? w)
-  (posn=? (first (snake-segs (world-snake w))) (world-fruta w)))
-
-(define (comiendo-bonus? w)
-  (posn=? (first (snake-segs (world-snake w))) (loc-bonus w)))
-
+(define (comiendo? w R)
+  (posn=? (first (snake-segs (world-snake w))) R))
 ;Contrato: posn=?: posn posn -> boolean. Donde a y b son puntos 2d
 ;Proposito: Funcion que determina si dos puntos estan sobrelapados
 ;Ejemplo
@@ -295,7 +283,7 @@
   (cond
     [(world-collision? w) WORLD0]
     [(self-collision? w) WORLD0]
-    [(comiendo? w) (make-world
+    [(comiendo? w (world-fruta w)) (make-world
                     (snake-grow (world-snake w))
                     (make-posn (random N-COLUMNAS)
                                (random N-FILAS))
@@ -307,7 +295,7 @@
                     (calc-score (snake-segs (world-snake w)) 0))]
 ;la serpiente es capaz de crecer dos veces porque se hace el llamado a snake-grow
 ;semi-recursivamente, evalua snake-grow si misma evaluada en el cuerpo de la serpiente
-    [(comiendo-bonus? w) (make-world
+    [(comiendo? w (loc-bonus w)) (make-world
                           (snake-grow (snake-grow (world-snake w)))
                           (make-posn (random N-COLUMNAS)
                                      (random N-FILAS))
