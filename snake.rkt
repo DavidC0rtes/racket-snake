@@ -1,5 +1,13 @@
 #lang racket
 ;;Snake
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+;;PROYECTO FINAL FUNDAMENTOS DE PROGRAMACIÓN
+;DOCENTE: Andres Mauricio Castillo 
+;INTERGRANTES
+;--Alvarado Juan Felipe
+;--Cortés David Santiago
+;--Hurtado Jose Alejandro
+;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 (require 2htdp/universe)
 (require 2htdp/image)
 (require 2htdp/batch-io)
