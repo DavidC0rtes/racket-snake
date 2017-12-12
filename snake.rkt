@@ -80,7 +80,7 @@
     [(>= (tiempo-bonus w) 0)
      (place-image
       (name+img)
-      30 15
+      35 15
       
      (place-image
                               (fig-score (snake-segs (world-snake w)) w)
@@ -159,13 +159,23 @@
   
 ;dibuja la última escena
 (define (last-scene w)
-  (ripsnek w)
-  (place-image
-   (above
-    (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
-    (fig-score (snake-segs (world-snake w)) w))
-   (/ ANCHO 2) (/ LARGO 2)
-   (render w)))
+  (cond
+    [(eqv? (sort-score w) "puntajes.txt")
+     (ripsnek w)
+     (place-image
+      (above
+       (text/font "NEW RECORD!" 30 "gold" "Times New Roman" 'default 'normal 'bold #f)
+       (fig-score (snake-segs (world-snake w)) w))
+      (/ ANCHO 2) (/ LARGO 2)
+      (render w))]
+    [else
+     (ripsnek w)
+     (place-image
+      (above
+       (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
+       (fig-score (snake-segs (world-snake w)) w))
+      (/ ANCHO 2) (/ LARGO 2)
+      (render w))]))
 ;;____________________________FUNCIONES PARA EL MOVIMIENTO______________________________
 ;Contrato: snake-grow: snake -> snake. Donde snake es una estructura
 ;Proposito: añade un nuevo segmento a la serpiente en la "cabecera" a una direccion dada
@@ -254,7 +264,8 @@
 (define (end? w)
   (if (muerto? w)
   (cond
-    [(eqv? (crear-txt w) "puntajes.txt") true]
+    [(eqv? (sort-score w) "puntajes.txt") true]
+    [(false? (sort-score w)) true]
     [else false]) false))
        
 ;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
@@ -335,20 +346,25 @@
 ;crear-txt: escribe el nombre insertado y el puntaje alcanzado hasta morir
 ;en un archivo de texto contenido en el directorio del programa
 ;texto: valor, guarda en forma de string el contenido del archivo de texto
-
-;Contrato: guarda-puntaje: world -> string
-;Propósito: guardar dentro de un archivo de texto el puntaje del jugador y su nombre
-;en todos los casos retorna el nombre del archuivo en el que se escribio en forma de string
-;Ejemplo:
-;(guarda-puntaje WORLD0) Debe retornar => "puntajes.txt"
 (define texto (read-file "puntajes.txt"))
+(define lineas (string-split texto "\n"))
+;Contrato: crar-txt: world -> string
+;Propósito:Crea un archivo de texto con el puntaje del jugador en el directorio de programa
 (define (crear-txt w)
-       (write-file "puntajes.txt" (string-append (text-contents nombre) "," (number->string (puntaje w)))))
+       (write-file "puntajes.txt"(number->string (puntaje w))))
 
-(define texto2 (read-file "puntajes.txt"))
+;Contrato: sort-score: world-> string o boolean
+;Propósito: Evalúa si el puntaje actual al morir
+;es mayor al registrado en el .txt, de ser así lo sobreescribe
+;de o contratio devuelve #f
+(define (sort-score w)
+  (cond
+    [(> (puntaje w) (string->number texto)) (crear-txt w)]
+    [else
+     false]))
 ;:::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
 (define header (make-message "
-      SNAKE ADVENTURE - FDP
+      SNAKE λDVENTURE - FDP
 " ))
 
 (define instrucciones
@@ -367,9 +383,9 @@ Consigue el mayor número de puntos."))
 (define (w2 e)
   (create-window
   (list
-   (list (make-message (string-append "Último puntaje
+   (list (make-message (string-append "Highscore
 "
-                                      texto2)))))#t)
+                                      texto)))))#t)
 
 (define (w3 e)
   (create-window
@@ -381,7 +397,7 @@ Consigue el mayor número de puntos."))
       (list
        (list header)
        (list (make-button "Jugar" w1))
-       (list (make-button "Último Puntaje" w2))
+       (list (make-button "Highscore" w2))
        (list (make-button "Instrucciones" w3))
        (list (make-button "Salir" (lambda (e) (hide-window w)))))))
   
@@ -392,4 +408,4 @@ Consigue el mayor número de puntos."))
     [on-tick next-world TICK]
     [on-key tecla]
     [stop-when end? last-scene]
-    [name "SNAKE ADVENTURE"]) #t)
+    [name "SNAKE λDVENTURE"]) #t)
