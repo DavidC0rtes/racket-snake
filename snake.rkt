@@ -51,6 +51,9 @@
 (define (loc-bonus w)
   (bonus-posn (world-bonus w)))
 
+(define (puntaje w)
+  (calc-score (snake-segs (world-snake w)) 0))
+
 (define WORLD0
   (make-world (make-snake (list (make-posn 2 6) ) "right")
               (make-posn 1 15) (make-bonus (make-posn 1 10) EXP)(make-score 0)))
@@ -240,15 +243,17 @@
 (define (in-bounds? p)
   (and (>= (posn-x p) 0) (< (posn-x p) N-COLUMNAS)
        (>= (posn-y p) 0) (< (posn-y p) N-FILAS)))
-       
-  
+ ;...      
+(define (muerto? w)
+  (or (world-collision? w) (self-collision? w)))
+
 ;;evalúa si el jugador ha perdido.
 ;;es decir, si choca con un muro o si choca consigo mismo
 (define (end? w)
+  (if (muerto? w)
   (cond
-    [(eqv? (highscore w) "puntajes.txt") true]
-    [else false]))
-;(or (world-collision? w) (self-collision? w)))
+    [(eqv? (guarda-puntaje w) "puntajes.txt") true]
+    [else false]) false))
        
 ;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
 ;el bonus expiró?
@@ -261,7 +266,6 @@
 ;reaparece el bonus
 (define (resetbonus w)
   (<= (tiempo-bonus w) (* EXP -1)))
-
 
 ;Contrato: next-world: world -> world. donde w es una estructura.
 ;Propósito: Funcion que calcula el nuevo estado del mundo cada tick del reloj
@@ -314,39 +318,26 @@
      (make-world (make-snake (snake-segs (world-snake w)) kev) (world-fruta w) (world-bonus w) (world-score w))]))
 
 ;:::::::::::::::::::::::FUNCIONES DE PUNTAJE Y GUARDAR PUNTAJE:::::::::::::::::::::::::::::::::
+;crear-txt: escribe el nombre insertado y el puntaje alcanzado hasta morir
+;en un archivo de texto contenido en el directorio del programa
+;texto: valor, guarda en forma de string el contenido del archivo de texto
 
-(define texto (read-file "puntajes.txt"))
-(define lineas (string-split texto "\n"))
-     
+;Contrato: guarda-puntaje: world -> string
+;Propósito: guardar dentro de un archivo de texto el puntaje del jugador y su nombre
+;en todos los casos retorna el nombre del archuivo en el que se escribio en forma de string
+;Ejemplo:
+;(guarda-puntaje WORLD0) Debe retornar => "puntajes.txt"
+(define (guarda-puntaje w)
+  (local
+    ((define texto (read-file "puntajes.txt"))
+     (define (crear-txt w)
+       (write-file "puntajes.txt" (string-append (text-contents nombre) "," (number->string (puntaje w))))))
+    (guarda-puntaje w)))
 
-(define (lista->score l) (cons (first l) (string->number
-
-                                          (first(rest l)))))
-
-(define (lista->lista-score l)
-       (cond
-         [(empty? l) empty]
-         [else
-          (cons (lista->score (string-split (first l) ",")) (lista->lista-score (rest l)))]))
-     
-(define (save-game w)
-     (cond
-        [(or (world-collision? w) (self-collision? w)) (crear-txt w)]
-        [else w]))
-               
-(define (crear-txt w)
-  (write-file "puntajes.txt" (string-append (text-contents nombre) "," (number->string (calc-score (snake-segs (world-snake w)) 0)))))
-
-(define (highscore w)
-  (cond
-    [(empty? lineas) empty]
-    [(empty?(rest lineas))
-     (write-file "puntajes.txt" (~a(lista->lista-score lineas)))]
-    [else w]))
-;::::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
+(define texto2 (read-file "puntajes.txt"))
+;:::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
 (define header (make-message "
       Culebrita - FDP
-
 " ))
 
 (define instrucciones
@@ -362,6 +353,13 @@ Consigue el mayor número de puntos."))
        (list nombre)
        (list (make-button "Jugar" main))))#t)
 
+(define (w2 e)
+  (create-window
+  (list
+   (list (make-message (string-append "Último puntaje
+"
+                                      texto2)))))#t)
+
 (define (w3 e)
   (create-window
    (list
@@ -372,6 +370,7 @@ Consigue el mayor número de puntos."))
       (list
        (list header)
        (list (make-button "Jugar" w1))
+       (list (make-button "Último Puntaje" w2))
        (list (make-button "Instrucciones" w3))
        (list (make-button "Salir" (lambda (e) (hide-window w)))))))
   
