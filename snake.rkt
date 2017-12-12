@@ -4,6 +4,7 @@
 (require 2htdp/image)
 (require 2htdp/batch-io)
 (require htdp/gui)
+(require (prefix-in racket: racket/gui))
 (require racket/string)
 
 ;;::::::::::::::::::DEFINICION DE ESTRUCTURAS::::::::::::::::::::::::::::::::::::
@@ -158,6 +159,7 @@
   
 ;dibuja la última escena
 (define (last-scene w)
+  (ripsnek w)
   (place-image
    (above
     (text/font "HAS MUERTO" 30 "red" "Times New Roman" 'default 'normal 'bold #f)
@@ -252,7 +254,7 @@
 (define (end? w)
   (if (muerto? w)
   (cond
-    [(eqv? (guarda-puntaje w) "puntajes.txt") true]
+    [(eqv? (crear-txt w) "puntajes.txt") true]
     [else false]) false))
        
 ;:::::::::::::::::::::::::::::::::::FUNCIONES LOGICAS:::::::::::::::::::::::::::::::::::::::::::
@@ -318,6 +320,18 @@
      (make-world (make-snake (snake-segs (world-snake w)) kev) (world-fruta w) (world-bonus w) (world-score w))]))
 
 ;:::::::::::::::::::::::FUNCIONES DE PUNTAJE Y GUARDAR PUNTAJE:::::::::::::::::::::::::::::::::
+;Funciones para el sonido de la muerte del snake
+;Funciones auxiliares:
+(define pth "C:/Users/Estudiante/Documents/Racket/snake-gam/Snake.wav")        ;Define el camino del archivo de sonido de la serpiente
+(define play-asynchronously #t) ;Continua en ejecución mientras el sonido se reproduce
+
+;Contrato: ripsnek : w-> Sonido (WAV)
+;Propósito: Reproducir un sonido en caso de muerte de la serpiente
+(define (ripsnek w)
+  (cond
+    [(or (world-collision? w) (self-collision? w)) (racket:play-sound pth play-asynchronously)]
+    [else w]))
+
 ;crear-txt: escribe el nombre insertado y el puntaje alcanzado hasta morir
 ;en un archivo de texto contenido en el directorio del programa
 ;texto: valor, guarda en forma de string el contenido del archivo de texto
@@ -327,17 +341,14 @@
 ;en todos los casos retorna el nombre del archuivo en el que se escribio en forma de string
 ;Ejemplo:
 ;(guarda-puntaje WORLD0) Debe retornar => "puntajes.txt"
-(define (guarda-puntaje w)
-  (local
-    ((define texto (read-file "puntajes.txt"))
-     (define (crear-txt w)
-       (write-file "puntajes.txt" (string-append (text-contents nombre) "," (number->string (puntaje w))))))
-    (guarda-puntaje w)))
+(define texto (read-file "puntajes.txt"))
+(define (crear-txt w)
+       (write-file "puntajes.txt" (string-append (text-contents nombre) "," (number->string (puntaje w)))))
 
 (define texto2 (read-file "puntajes.txt"))
 ;:::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
 (define header (make-message "
-      Culebrita - FDP
+      SNAKE ADVENTURE - FDP
 " ))
 
 (define instrucciones
@@ -381,4 +392,4 @@ Consigue el mayor número de puntos."))
     [on-tick next-world TICK]
     [on-key tecla]
     [stop-when end? last-scene]
-    [name "culebrita"]) #t)
+    [name "SNAKE ADVENTURE"]) #t)
