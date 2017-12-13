@@ -3,7 +3,7 @@
 ;:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ;;PROYECTO FINAL FUNDAMENTOS DE PROGRAMACIÓN
 ;DOCENTE: Andres Mauricio Castillo 
-;INTERGRANTES
+;INTEGRANTES
 ;--Alvarado Juan Felipe
 ;--Cortés David Santiago
 ;--Hurtado Jose Alejandro
@@ -42,7 +42,7 @@
 (define ANCHO (* N-COLUMNAS CELDA))
 (define LARGO (* N-FILAS CELDA))
 
-(define FONDO (empty-scene ANCHO LARGO "black"))
+(define FONDO .)
 
 (define BODY (rectangle (/ CELDA 1.5) (/ CELDA 1.5) "solid" "white" ))
 
@@ -130,7 +130,6 @@
 
 ;Contrato: segs+img: list image -> image
 ;Proposito: Funcion que dibuja todos los segmentos
-;Ejemplo
 (define (segs+img loseg img)
   (cond
     [(empty? loseg) img]
@@ -141,8 +140,7 @@
       (segs+img (rest loseg) img))]))
   
 ;Contrato:food+img: fruta image -> image
-;Propósito: Dibujar las fruta en el canvas
-;Ejemplo: 
+;Propósito: Dibujar las fruta en el canvas 
 (define (food+img fruta img)
   (imagen-en-celda APPLE (posn-x fruta) (posn-y fruta) img))
 
@@ -152,10 +150,7 @@
 (define (bono+img w img)
   (imagen-en-celda BONO (posn-x (loc-bonus w)) (posn-y (loc-bonus w)) img))
 
-;Contrato: score+img: number --> image
-;Propósito: Hacer que el puntaje aparezca durante el juego y se actualice
-;(define (score+img score img)
- ; (imagen-en-celda (fig-score (snake-segs score)) 510 15 img))
+;Contrato: name+img: objeto-gui > image
 (define (name+img)
   (text (text-contents nombre) 20 "cyan"))
 
@@ -200,7 +195,6 @@
 ;;____________________________FUNCIONES PARA EL MOVIMIENTO______________________________
 ;Contrato: snake-grow: snake -> snake. Donde snake es una estructura
 ;Proposito: Funcion que añade un nuevo segmento a la serpiente en la "cabecera" a una direccion dada
-;Ejemplo: 
 (define (snake-grow snake)
   (make-snake (cons (new-seg (first (snake-segs snake)) (snake-dir snake))
                     (snake-segs snake))
@@ -208,7 +202,6 @@
 
 ;Contrato: new-seg: snake-dir -> snake-seg
 ;Proposito: Funcion que crea un nuevo segmento
-;Ejemplo:
 (define (new-seg seg dir)
   (cond
     [(string=? "up" dir) (make-posn (posn-x seg) (+ (posn-y seg) 1))]
@@ -227,7 +220,6 @@
 
 ;Contrato: nuke-last: snake-> snake
 ;Proposito: Funcion que retorna una snake sin su ultimo segmento
-;Ejemplo:
 (define (nuke-last loseg)
   (cond
     [(empty? (rest loseg)) empty]
@@ -266,16 +258,21 @@
 
 ;Contrato: in-bounds?: p -> boolean. Donde p es un punto 2d
 ;Proposito: Funcion que determina si un determinado punto esta en el borde del canvas
-;Ejemplo:
 (define (in-bounds? p)
   (and (>= (posn-x p) 0) (< (posn-x p) N-COLUMNAS)
        (>= (posn-y p) 0) (< (posn-y p) N-FILAS)))
- ;...      
+;Contrato: muerto?: world-> boolean
+;Propósito: Evalua si la serpiente ha muerto por chocar consigo misma
+;o con los bordes del canvas.
+;Ejemplo:
+;(muerto? WORLD0) Debe retornar => false
 (define (muerto? w)
   (or (world-collision? w) (self-collision? w)))
 
-;;evalúa si el jugador ha perdido.
-;;es decir, si choca con un muro o si choca consigo mismo
+;Contrato: end?: world -> boolean
+;Propósito: Función que determina cuando para el big-bang
+;como primera condición recibe a muerto? y luego procede a registrar
+;el puntaje obtenido si este mayor al que ya estaba en el .txt
 (define (end? w)
   (if (muerto? w)
   (cond
@@ -351,7 +348,7 @@
 ;:::::::::::::::::::::::FUNCIONES DE PUNTAJE Y GUARDAR PUNTAJE:::::::::::::::::::::::::::::::::
 ;Funciones para el sonido de la muerte del snake
 ;Funciones auxiliares:
-(define pth "C:/Users/Estudiante/Documents/Racket/snake-gam/Snake.wav")        ;Define el camino del archivo de sonido de la serpiente
+(define pth "Snake.wav")        ;Define el camino del archivo de sonido de la serpiente
 (define play-asynchronously #t) ;Continua en ejecución mientras el sonido se reproduce
 
 ;Contrato: ripsnek : w-> Sonido (WAV)
@@ -381,35 +378,40 @@
     [else
      false]))
 ;:::::::::::::::::::::::::::::::::::::VENTANAS::::::::::::::::::::::::::::::::
+;Titulo que aparece arriba al ejecutar el juego
 (define header (make-message "
       SNAKE λDVENTURE - FDP
 " ))
-
+;Las instrucciones del snake
 (define instrucciones
   (make-message "Mover con las flechas de dirección del teclado.
 Consigue el mayor número de puntos."))
-
+;Cuadro de texto para ingresar el nombre
 (define nombre
   (make-text "Nombre:"))
-
+;Ventana que se mostrará al presionar el botón jugar
 (define (w1 e)
     (create-window
       (list
        (list nombre)
        (list (make-button "Jugar" main))))#t)
 
+;Esta ventana lee el archivo .txt que contiene el puntaje mas alto
+;y lo muestra en pantalla
 (define (w2 e)
   (create-window
   (list
    (list (make-message (string-append "Highscore
 "
                                       texto)))))#t)
-
+;Ventana que muestra las instrucciones
 (define (w3 e)
   (create-window
    (list
     (list instrucciones)))#t)
-;ventana principal
+;ventana principal, organiza todas las ventanas anteriores en forma de una lista
+;(es el mismo orden en el que aparecerán). Se utiliza un función anonima lambda
+;para cerrar la ventana cuando se presione el boton "Salir".
 (define w
     (create-window
       (list
@@ -419,7 +421,8 @@ Consigue el mayor número de puntos."))
        (list (make-button "Instrucciones" w3))
        (list (make-button "Salir" (lambda (e) (hide-window w)))))))
   
-;;BIG-BANG  
+;Contrato: main: world -> world
+;Propósito: Función principal del mundo. Crea todo el juego mediante el big-bang
 (define (main w)
   (big-bang WORLD0
     [to-draw render]
